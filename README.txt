@@ -1,5 +1,5 @@
 
-2025 Modified by Jean-Marc Lienher for python and gtk3
+2025 Modified by Jean-Marc Lienher for python3 and gtk3
 
 ------------------------
 the Virtual USB Analyzer
