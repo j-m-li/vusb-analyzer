@@ -1,3 +1,9 @@
+vusb-analyzer GIT
+-----------------
+
+- Use python3 by Jean-Marc Lienher.
+
+
 vusb-analyzer SVN
 -----------------
 

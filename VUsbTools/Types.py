@@ -19,7 +19,7 @@ try:
     from psyco.classes import psyobj
     from psyco import bind as psycoBind
 except ImportError:
-    print "Warning: psyco not found, install it for a nice speed boost."
+    print("Warning: psyco not found, install it for a nice speed boost.")
     psyobj = object
     psycoBind = lambda _: None
 
@@ -86,7 +86,7 @@ class Event(psyobj):
 
 
 def hexDump(data, width=16, ascii=True, addrs=True, lineLimit=-1,
-            asciiTable = '.' * 32 + ''.join(map(chr, range(32, 127))) + '.' * 129
+            asciiTable = '.' * 32 + ''.join(map(chr, list(range(32, 127)))) + '.' * 129
             ):
     """Create a hex dump of the provided string. Optionally
        prefixes each line with an address, and appends to each
@@ -103,7 +103,7 @@ def hexDump(data, width=16, ascii=True, addrs=True, lineLimit=-1,
             results.append("%04X: " % addr)
         results.append(' '.join(["%02X" % ord(c) for c in l]))
         if ascii:
-            results.append(' '.join(["  " for i in xrange(len(l), width + 1)]))
+            results.append(' '.join(["  " for i in range(len(l), width + 1)]))
             results.append(l.translate(asciiTable))
         lineLimit -= 1
         addr += len(l)
@@ -124,7 +124,7 @@ class Transaction(Event):
         """Append data to this packet, given as a whitespace-separated
            string of hexadecimal bytes.
            """
-        self.data += binascii.a2b_hex(data.replace(' ', ''))
+        self.data += binascii.a2b_hex(data.replace(' ', '')).decode("latin1")
 
         # Increase datalen if we need to. Since the log might not
         # include complete data captures while it does include the

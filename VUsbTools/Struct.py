@@ -51,7 +51,7 @@ class Item:
         if len(item) != size:
             self._value = None
         else:
-            self._value = struct.unpack(self._format, item)[0]
+            self._value = struct.unpack(self._format, item.encode("latin1"))[0]
         return buffer
 
     def __str__(self):
@@ -95,7 +95,7 @@ class UInt32Hex(UInt32):
 class Utf16String(Item):
     def decode(self, buffer):
         l = len(buffer) & ~1
-        self._value = unicode(buffer[:l], 'utf16')
+        self._value = buffer[:l].encode('utf16')
         return buffer[l:]
 
     def __str__(self):

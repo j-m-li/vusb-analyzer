@@ -11,10 +11,13 @@
 # License, please see the README.txt. All rights reserved.
 #
 
-from __future__ import division
+import queue, gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import GObject as gobject
+
 import sys, time, re, os, string, atexit
-import xml.sax, Queue, threading, difflib
-import gtk, gobject
+import xml.sax, queue, threading, difflib
 import traceback, gzip, struct
 from VUsbTools import Types
 
@@ -32,6 +35,8 @@ class UsbIOParser(Types.psyobj):
     def parse(self, line, timestamp=None, frame=None, lineNumber=None):
         tokens = line.split()
         finished = None
+        if len(tokens) < 1:
+            return
 
         if tokens[0] in ('Up', 'Down'):
             self.flush()
@@ -143,7 +148,7 @@ class TimestampLogParser:
                 trans.appendDecoded(" ".join(tokens[1:]))
                 self.eventQueue.put(trans)
         except:
-            print "Error on line %d:" % self.lineNumber
+            print("Error on line %d:" % self.lineNumber)
             traceback.print_exc()
 
 
@@ -288,7 +293,7 @@ class EllisysXmlHandler(xml.sax.handler.ContentHandler):
     def endElement(self, name):
         self.characterHandler = None
         if name == 'Document':
-            for pipe in self.pipes.keys():
+            for pipe in list(self.pipes.keys()):
                 self.completeUrb(pipe, 'End of Log')
 
     def startElement_Transaction(self, attrs):
@@ -297,7 +302,7 @@ class EllisysXmlHandler(xml.sax.handler.ContentHandler):
 
     def startElement_Reset(self, attrs):
         # Error out any transactions that are active during a reset
-        for pipe in self.pipes.keys():
+        for pipe in list(self.pipes.keys()):
             self.completeUrb(pipe, 'Bus Reset')
 
     def beginUrb(self, pipe):
@@ -492,7 +497,7 @@ class UsbmonLogParser:
                        (tokens[2] in ('S', 'C', 'E'))):
                     return
             except:
-                print "Error on line %d:" % self.lineNumber
+                print("Error on line %d:" % self.lineNumber)
                 return
 
             # Copied log file format description of the usbmon kernel
@@ -694,7 +699,7 @@ class UsbmonLogParser:
         # End of log file parsing
 
         except:
-            print "Error on line %d:" % self.lineNumber
+            print("Error on line %d:" % self.lineNumber)
             traceback.print_exc()
 
 
@@ -739,7 +744,7 @@ class Follower(threading.Thread):
                     self.parser.parse(line)
 
                     # Compute our progress only every progressInterval seconds
-                    now = time.clock()
+                    now = time.time()
                     if now >= self.progressExpiration:
                         self.setProgress(min(1.0, self.file.tell() / self.fileSize))
                         self.progressExpiration = now + self.progressInterval
@@ -762,7 +767,7 @@ class Follower(threading.Thread):
         try:
             while 1:
                 self.parser.eventQueue.get(False)
-        except Queue.Empty:
+        except queue.Empty:
             pass
         self.join()
 
@@ -774,22 +779,22 @@ class QueueSink:
     interval = 200
     timeSlice = 0.25
     maxsize = 512
-    batch = range(10)
+    batch = list(range(10))
 
     def __init__(self, callback):
-        self.eventQueue = Queue.Queue(self.maxsize)
+        self.eventQueue = queue.Queue(self.maxsize)
         self.callback = callback
         self.poll()
 
     def poll(self):
         try:
-            deadline = time.clock() + self.timeSlice
-            while time.clock() < deadline:
+            deadline = time.time() + self.timeSlice
+            while time.time() < deadline:
                 # This avoids calling time.clock() once per queue item.
                 for _ in self.batch:
                     try:
                         event = self.eventQueue.get(False)
-                    except Queue.Empty:
+                    except queue.Empty:
                         # We have nothing to do, set a longer interval
                         gobject.timeout_add(self.interval, self.poll)
                         return False
