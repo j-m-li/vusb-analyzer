@@ -885,7 +885,7 @@ class TransactionList(View):
            """
         if not self.settingCursor:
             row = view.get_cursor()[0]
-            if len(row) > 0:
+            if row is not None:
                 i = self.model.get_iter(row)
                 event = self.model.get(i, 9)[0]
                 self.notifyHilightChanged(event)
