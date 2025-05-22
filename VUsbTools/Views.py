@@ -866,7 +866,7 @@ class TransactionList(View):
         self.onSelectionChanged(self.selection)
 
         # Allow multiple select, and hook up a context menu
-       # self.selection.set_mode(gtk.SELECTION_MULTIPLE)
+        self.selection.set_mode(gtk.SelectionMode.MULTIPLE)
         self.changed_id = self.selection.connect("changed",
                                                  self.onSelectionChanged)
         self.view.connect("button-press-event", self.onButtonPressed)
@@ -885,9 +885,10 @@ class TransactionList(View):
            """
         if not self.settingCursor:
             row = view.get_cursor()[0]
-            i = self.model.get_iter(row)
-            event = self.model.get(i, 9)[0]
-            self.notifyHilightChanged(event)
+            if len(row) > 0:
+                i = self.model.get_iter(row)
+                event = self.model.get(i, 9)[0]
+                self.notifyHilightChanged(event)
 
     def onSelectionChanged(self, selection):
         """When the set of selected rows change, update the summary data in the
@@ -928,7 +929,7 @@ class TransactionList(View):
 
     def onButtonPressed(self, view, event):
         if event.button == 3:
-            self.createMenu().popup(None, None, None, event.button, event.time)
+            self.createMenu().popup(None, None, None, None, event.button, event.time)
             return True
         return False
 
@@ -967,12 +968,11 @@ class TransactionList(View):
     def saveSelectedData(self, widget):
         dialog = gtk.FileChooserDialog(
             title = "Save Raw Transaction Data",
-            action = gtk.FILE_CHOOSER_ACTION_SAVE,
-            buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                       gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT))
-        dialog.set_default_response(gtk.RESPONSE_ACCEPT)
+            action = gtk.FileChooserAction.SAVE,
+            buttons = ("gtk-cancel", gtk.ResponseType.REJECT, "gtk-save", gtk.ResponseType.ACCEPT))
+        dialog.set_default_response(gtk.ResponseType.ACCEPT)
 
-        if dialog.run() == gtk.RESPONSE_ACCEPT:
+        if dialog.run() == gtk.ResponseType.ACCEPT:
             f = open(dialog.get_filename(), "wb")
 
             for row in self.selection.get_selected_rows()[1]:
@@ -980,9 +980,9 @@ class TransactionList(View):
                 event = self.model.get(iter, 9)[0]
 
                 if event.hasSetupData():
-                    f.write(event.data[8:])
+                    f.write(event.data[8:].encode("latin1"))
                 else:
-                    f.write(event.data)
+                    f.write(event.data.encode("latin1"))
 
         dialog.destroy()
 
